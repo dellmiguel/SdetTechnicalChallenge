@@ -1,0 +1,112 @@
+
+name: API E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test-dev:
+    name: E2E Tests - DEV
+    runs-on: ubuntu-latest
+
+    env:
+      BASE_URL: http://localhost:3000
+      TEST_ENV: dev
+      AUTH_TOKEN: ${{ secrets.API_AUTH_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Start API container
+        run: |
+          docker run -d \
+            --name user-api \
+            -p 3000:3000 \
+            ghcr.io/danielsilva-loanpro/sdet-interview-challenge
+
+      - name: Wait for API
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:3000/dev/users > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API did not become ready"
+          docker logs user-api
+          exit 1
+
+      - name: Run DEV tests
+        run: |
+          dotnet test SdetTechnicalChallenge.slnx \
+            --logger "trx;LogFileName=dev-results.trx" \
+            --results-directory TestResults/dev
+
+      - name: Upload DEV results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-test-results
+          path: TestResults/dev/
+          if-no-files-found: warn
+
+  test-prod:
+    name: E2E Tests - PROD
+    runs-on: ubuntu-latest
+
+    env:
+      BASE_URL: http://localhost:3000
+      TEST_ENV: prod
+      AUTH_TOKEN: ${{ secrets.API_AUTH_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Start API container
+        run: |
+          docker run -d \
+            --name user-api \
+            -p 3000:3000 \
+            ghcr.io/danielsilva-loanpro/sdet-interview-challenge
+
+      - name: Wait for API
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:3000/prod/users > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API did not become ready"
+          docker logs user-api
+          exit 1
+
+      - name: Run PROD tests
+        run: |
+          dotnet test SdetTechnicalChallenge.slnx \
+            --logger "trx;LogFileName=prod-results.trx" \
+            --results-directory TestResults/prod
+
+      - name: Upload PROD results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-test-results
+          path: TestResults/prod/
+          if-no-files-found: warn
