@@ -21,7 +21,6 @@ public class GetUserTests
     [Test]
     public async Task GetUser_WithExistingEmail_ShouldReturn200AndUser()
     {
-        // Arrange
         var user = new User
         {
             Name = "Get User Test",
@@ -29,13 +28,9 @@ public class GetUserTests
             Age = 30
         };
         var createResponse = await _apiClient.CreateUserAsync(user);
-
         Assert.That(createResponse.StatusCode, Is.EqualTo(HttpStatusCode.Created), "Precondition failed: test user could not be created.");
 
-        // Act
         var response = await _apiClient.GetUserAsync(user.Email);
-
-        // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
         var returnedUser = JsonSerializer.Deserialize<User>(response.Content!,
@@ -56,11 +51,8 @@ public class GetUserTests
     [Test]
     public async Task GetUser_WithNonExistingEmail_ShouldReturn404AndErrorResponse()
     {
-        // Arrange
         var nonExistingEmail = $"non.existing.{Guid.NewGuid()}@example.com";
-        // Act
         var response = await _apiClient.GetUserAsync(nonExistingEmail);
-        // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(response.Content!,
                 new JsonSerializerOptions

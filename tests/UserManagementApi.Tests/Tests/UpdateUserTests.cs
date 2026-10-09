@@ -21,7 +21,6 @@ public class UpdateUserTests
     [Test]
     public async Task UpdateUser_WithValidData_ShouldReturn200AndUpdatedUser()
     {
-        // Arrange
         var originalUser = new User
         {
             Name = "Original User",
@@ -31,15 +30,14 @@ public class UpdateUserTests
 
         var createResponse = await _apiClient.CreateUserAsync(originalUser);
         Assert.That(createResponse.StatusCode, Is.EqualTo(HttpStatusCode.Created), "Precondition failed: test user could not be created.");
+        
         var updatedUser = new User
         {
             Name = "Updated User",
             Email = originalUser.Email,
             Age = 35
         };
-        // Act
         var response = await _apiClient.UpdateUserAsync(originalUser.Email, updatedUser);
-        // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         var returnedUser = JsonSerializer.Deserialize<User>(response.Content!, new JsonSerializerOptions
         {
