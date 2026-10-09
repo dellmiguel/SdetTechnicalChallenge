@@ -52,6 +52,12 @@ jobs:
             --logger "trx;LogFileName=dev-results.trx" \
             --results-directory TestResults/dev
 
+      - name: Generate DEV HTML report
+        if: always()
+        run: |
+          dotnet tool install --global trxlog2html --version 1.0.4
+          trxlog2html -i TestResults/dev/dev-results.trx -o TestResults/dev/dev-report.html
+
       - name: Upload DEV results
         if: always()
         uses: actions/upload-artifact@v4
@@ -103,6 +109,12 @@ jobs:
             --logger "trx;LogFileName=prod-results.trx" \
             --results-directory TestResults/prod
 
+      - name: Generate PROD HTML report
+        if: always()
+        run: |
+          dotnet tool install --global trxlog2html --version 1.0.4
+          trxlog2html -i TestResults/prod/prod-results.trx -o TestResults/prod/prod-report.html
+          
       - name: Upload PROD results
         if: always()
         uses: actions/upload-artifact@v4
